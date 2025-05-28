@@ -1,0 +1,69 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+type User = { userId: string; email: string; isAdmin: boolean; purchases: number; history: string[] };
+const STORAGE_KEY = '@users_db';
+
+// initialize with two accounts
+const initialUsers: Record<string, User> = {
+  'user@yourapp.com': { userId: 'u-1', email: 'user@yourapp.com', isAdmin: false, purchases: 0, history: [] },
+  'admin@yourapp.com': { userId: 'a-1', email: 'admin@yourapp.com', isAdmin: true, purchases: 0, history: [] }
+};
+
+async function loadDb(): Promise<Record<string, User>> {
+  const raw = await AsyncStorage.getItem(STORAGE_KEY);
+  if (raw) return JSON.parse(raw);
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(initialUsers));
+  return initialUsers;
+}
+
+async function saveDb(db: Record<string, User>) {
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+}
+
+export async function login(email: string, password: string) {
+  const db = await loadDb();
+  let user = db[email];
+  if (!user) {
+    // auto-signup
+    const userId = email.includes('admin') ? `a-${Date.now()}` : `u-${Date.now()}`;
+    user = { userId, email, isAdmin: email.includes('admin'), purchases: 0, history: [] };
+    db[email] = user;
+    await saveDb(db);
+  }
+  return { userId: user.userId, email: user.email, isAdmin: user.isAdmin };
+}
+
+export async function getPurchases(userId: string) {
+  const db = await loadDb();
+  const user = Object.values(db).find(u => u.userId === userId);
+  return user?.purchases ?? 0;
+}
+
+export async function getHistory(userId: string) {
+  const db = await loadDb();
+  const user = Object.values(db).find(u => u.userId === userId);
+  return user?.history ?? [];
+}
+
+export async function registerPurchase(targetUserId: string) {
+  const db = await loadDb();
+  const user = Object.values(db).find(u => u.userId === targetUserId);
+  if (!user) throw new Error('User not found');
+  user.purchases += 1;
+  user.history.push(new Date().toISOString().split('T')[0]);
+  await saveDb(db);
+  return user.purchases;
+}
+
+export async function claimReward(targetUserId: string) {
+  const db = await loadDb();
+  const user = Object.values(db).find(u => u.userId === targetUserId);
+  if (!user) throw new Error('User not found');
+  if (user.purchases < 5) {
+    throw new Error('Not enough purchases');
+  }
+  user.purchases = 0;
+  user.history = [];
+  await saveDb(db);
+  return true;
+}
