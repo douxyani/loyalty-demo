@@ -13,6 +13,10 @@ import HomeScreen from './screens/HomeScreen';
 import QRScannerScreen from './screens/QRScannerScreen';
 import AdminResultScreen from './screens/AdminResultScreen';
 import RewardSettingsScreen from './screens/RewardSettingsScreen';
+import ReferFriendScreen from './screens/ReferFriendScreen';
+import ReferFriendSettingsScreen from './screens/ReferFriendSettingsScreen';
+import PostsScreen from './screens/PostsScreen';
+import CreatePostScreen from './screens/CreatePostScreen';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, TabStackParamList } from './navigation/types';
 import { useState, useEffect } from 'react';
@@ -30,7 +34,7 @@ function MainTabs({ route }: MainTabsProps) {
 
   return (
     <Tab.Navigator
-      initialRouteName={isAdmin ? 'AdminScreen' : 'Home'} // Default to AdminScreen if isAdmin is true
+      initialRouteName={isAdmin ? 'AdminScreen' : 'Home'}
       screenOptions={{
         tabBarStyle: { paddingBottom: 5, height: 60 },
         tabBarActiveTintColor: '#007AFF',
@@ -48,9 +52,20 @@ function MainTabs({ route }: MainTabsProps) {
         }}
       />
       <Tab.Screen
+        name="Posts"
+        component={PostsScreen}
+        initialParams={{ userId, isAdmin }}
+        options={{
+          title: 'Posts',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="campaign" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="ProfileScreen"
         component={ProfileScreen}
-        initialParams={{ email }} // Ensure email is passed
+        initialParams={{ email }}
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => (
@@ -62,7 +77,7 @@ function MainTabs({ route }: MainTabsProps) {
         <Tab.Screen
           name="AdminScreen"
           component={AdminScreen}
-          initialParams={{ userId, email }} // Add email parameter
+          initialParams={{ userId, email }}
           options={{
             title: 'Admin',
             tabBarIcon: ({ color }) => (
@@ -84,6 +99,10 @@ function RootStack() {
       <Stack.Screen name="QRScannerScreen" component={QRScannerScreen} />
       <Stack.Screen name="AdminResultScreen" component={AdminResultScreen} />
       <Stack.Screen name="RewardSettingsScreen" component={RewardSettingsScreen} />
+      <Stack.Screen name="ReferFriendScreen" component={ReferFriendScreen} />
+      <Stack.Screen name="ReferFriendSettingsScreen" component={ReferFriendSettingsScreen} />
+      <Stack.Screen name="Posts" component={PostsScreen} />
+      <Stack.Screen name="CreatePostScreen" component={CreatePostScreen} />
     </Stack.Navigator>
   );
 }
