@@ -46,7 +46,8 @@
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "^0.20.0",
     "sonner-native": "^0.20.0",
-    "stacktrace-parser": "^0.1.10"
+    "stacktrace-parser": "^0.1.10",
+    "expo-notifications": "~0.31.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

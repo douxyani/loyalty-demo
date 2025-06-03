@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet, ActivityIndicator, View } from 'react-native';
+import { StyleSheet, ActivityIndicator, View, Platform } from 'react-native';
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Toaster } from 'sonner-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -127,6 +127,8 @@ const linking = {
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  // Add a state to track notification permission and token
+  const [notificationChecked, setNotificationChecked] = useState(false);
 
   useEffect(() => {
     let didSetInitial = false;
@@ -166,7 +168,6 @@ export default function App() {
   }, []);
 
   if (loading) {
-    // Show a loading spinner with a background to avoid a black screen
     return (
       <GestureHandlerRootView style={styles.container}>
         <SafeAreaProvider>

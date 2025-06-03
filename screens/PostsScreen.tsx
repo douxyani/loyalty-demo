@@ -13,13 +13,13 @@ import {
   Alert,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, TabStackParamList } from '../navigation/types';
+import { RootStackParamList } from '../navigation/types';
 import { theme } from '../styles/theme';
 import { supabase } from '../lib/supabase';
 import { Post } from '../types/database';
+import { sendPostNotification } from '../lib/pushNotifications';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.94;
@@ -84,6 +84,29 @@ function PostCard({
   onDelete?: (post: Post) => void;
 }) {
   const active = isPostActive(post);
+
+  const handleNotify = () => {
+    Alert.alert(
+      'Notify Users',
+      'Send a push notification about this post to all users?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Notify',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await sendPostNotification(post.id);
+              Alert.alert('Notification Sent', 'Users have been notified.');
+            } catch (err) {
+              Alert.alert('Notification Error', 'Failed to send notification.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View
       style={[
@@ -114,6 +137,13 @@ function PostCard({
               accessibilityLabel="Delete post"
             >
               <MaterialCommunityIcons name="delete-outline" size={20} color="#F44336" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={handleNotify}
+              accessibilityLabel="Notify users"
+            >
+              <MaterialCommunityIcons name="bell-ring-outline" size={20} color={theme.colors.primary} />
             </TouchableOpacity>
           </View>
         )}

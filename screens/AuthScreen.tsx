@@ -7,8 +7,6 @@ import {
   Text,
   Image,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
@@ -19,14 +17,14 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { signInWithEmail, signUpWithEmail } from '../lib/auth';
-import { supabase, supabaseAdmin } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { toast } from 'sonner-native';
 import GoogleSignInComponent from './GoogleSignInComponent';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuthData, removeAuthData } from '../lib/authStorage';
 import { theme } from '../styles/theme';
+import { requestAndRegisterPushToken } from '../lib/pushNotifications';
 
 const { width } = Dimensions.get('window');
 
@@ -204,6 +202,11 @@ export default function AuthScreen({ navigation }: Props) {
           email: user.email ?? '',
           isAdmin,
         });
+
+        // Request notification permission and register token after login
+        setTimeout(() => {
+          requestAndRegisterPushToken(user.id);
+        }, 500);
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -238,6 +241,11 @@ export default function AuthScreen({ navigation }: Props) {
         email: user.email ?? '',
         isAdmin: role === 'admin'
       });
+
+      // Request notification permission and register token after login
+      setTimeout(() => {
+        requestAndRegisterPushToken(user.id);
+      }, 500);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An error occurred';
       toast.error(message);

@@ -14,10 +14,11 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-import { supabase, supabaseAdmin } from '../lib/supabase';
+import { supabaseAdmin } from '../lib/supabase';
 import { theme } from '../styles/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { sendPostNotification } from '../lib/pushNotifications';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreatePostScreen'>;
 
@@ -47,6 +48,7 @@ export default function CreatePostScreen({ route, navigation }: Props) {
   const [isValidUntil, setIsValidUntil] = useState('');
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [sendNotification, setSendNotification] = useState(false);
 
   // Date/time picker states
   const [pickerType, setPickerType] = useState<'start' | 'end' | 'date' | null>(null);
@@ -112,11 +114,20 @@ export default function CreatePostScreen({ route, navigation }: Props) {
         navigation.goBack();
       }
     } else {
-      const { error } = await supabaseAdmin.from('posts').insert(postPayload);
+      // Create new post
+      const { data, error } = await supabaseAdmin.from('posts').insert(postPayload).select().single();
       setSaving(false);
       if (error) {
         Alert.alert('Error', error.message);
       } else {
+        // If sendNotification is checked, trigger push notification
+        if (sendNotification && data?.id) {
+          try {
+            await sendPostNotification(data.id);
+          } catch (err) {
+            Alert.alert('Notification Error', 'Failed to send push notification.');
+          }
+        }
         navigation.goBack();
       }
     }
@@ -268,6 +279,17 @@ export default function CreatePostScreen({ route, navigation }: Props) {
             trackColor={{ true: theme.colors.primary, false: '#ccc' }}
           />
         </View>
+        {!editing && (
+          <View style={styles.row}>
+            <Text style={styles.label}>Send push notification to all users</Text>
+            <Switch
+              value={sendNotification}
+              onValueChange={setSendNotification}
+              thumbColor={sendNotification ? theme.colors.primary : '#ccc'}
+              trackColor={{ true: theme.colors.primary, false: '#ccc' }}
+            />
+          </View>
+        )}
         <View style={styles.buttonRow}>
           {editing && (
             <TouchableOpacity
