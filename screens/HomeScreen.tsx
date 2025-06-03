@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import QRCode from 'react-native-qrcode-svg';
@@ -548,6 +549,22 @@ export default function HomeScreen({ route, navigation }: Props) {
           <Text style={styles.qrButtonText}>Show QR Code</Text>
         </TouchableOpacity>
 
+        {/* Refer a Friend Button */}
+        <TouchableOpacity
+          style={styles.referButton}
+          onPress={() => {
+            // Use parent navigator to access stack screens
+            if (navigation.getParent) {
+              navigation.getParent()?.navigate('ReferFriendScreen', { userId });
+            } else {
+              Alert.alert("Error", "Unable to navigate to Refer a Friend screen.");
+            }
+          }}
+        >
+          <MaterialCommunityIcons name="account-multiple-plus" size={24} color="#fff" />
+          <Text style={styles.referButtonText}>Refer a Friend</Text>
+        </TouchableOpacity>
+
         {renderStats()}
 
         <View style={styles.historyContainer}>
@@ -1005,5 +1022,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginVertical: 20,
     textAlign: 'center',
+  },
+  referButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.accent,
+    marginHorizontal: 20,
+    marginTop: 16,
+    padding: 15,
+    borderRadius: 12,
+    gap: 10,
+  },
+  referButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

@@ -114,39 +114,38 @@ export default function QRScannerScreen({ route, navigation }: Props) {
         throw new Error(`Failed to fetch user role: ${roleError?.message || 'Unknown error'}`);
       }
 
-      const isAdmin = userRole.role === 'admin';
-      const client = isAdmin ? supabase : supabaseAdmin;
+      console.log(userId)
 
-      let { data: userData, error: userError } = await client
+      let { data: userData, error: userError } = await supabaseAdmin
         .from('users')
         .select('id, name, purchases_no')
         .eq('id', userId)
         .single();
 
-      if (!userData) {
-        console.log('User not found in users table, checking auth...');
-        const { data: { user }, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
+      // if (!userData) {
+      //   console.log('User not found in users table, checking auth...');
+      //   const { data: { user }, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
 
-        if (authError || !user) {
-          throw new Error(`User not found in auth system: ${authError?.message || 'Unknown error'}`);
-        }
+      //   if (authError || !user) {
+      //     throw new Error(`User not found in auth system: ${authError?.message || 'Unknown error'}`);
+      //   }
 
-        const { data: newUser, error: createError } = await client
-          .from('users')
-          .insert([
-            {
-              id: userId,
-              email: user.email,
-              name: user.user_metadata?.name || 'Unknown User',
-              purchases_no: 0,
-            },
-          ])
-          .select()
-          .single();
+      //   const { data: newUser, error: createError } = await client
+      //     .from('users')
+      //     .insert([
+      //       {
+      //         id: userId,
+      //         email: user.email,
+      //         name: user.user_metadata?.name || 'Unknown User',
+      //         purchases_no: 0,
+      //       },
+      //     ])
+      //     .select()
+      //     .single();
 
-        if (createError || !newUser) throw new Error(`Failed to create user record: ${createError?.message || 'Unknown error'}`);
-        userData = newUser;
-      }
+      //   if (createError || !newUser) throw new Error(`Failed to create user record: ${createError?.message || 'Unknown error'}`);
+      //   userData = newUser;
+      // }
 
       if (!userData) throw new Error('Failed to get or create user data');
       const user = userData as UserRecord;

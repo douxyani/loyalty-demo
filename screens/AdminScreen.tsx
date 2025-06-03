@@ -68,6 +68,14 @@ export default function AdminScreen({ route, navigation }: Props) {
         <MaterialCommunityIcons name="cog-outline" size={22} color="#fff" />
         <Text style={styles.rewardSettingsButtonText}>Reward Settings</Text>
       </TouchableOpacity>
+      {/* Refer-a-Friend Settings Button */}
+      <TouchableOpacity
+        style={styles.referSettingsButton}
+        onPress={() => navigation.navigate('ReferFriendSettingsScreen')}
+      >
+        <MaterialCommunityIcons name="account-multiple-plus" size={22} color="#fff" />
+        <Text style={styles.rewardSettingsButtonText}>Refer-a-Friend Settings</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -119,6 +127,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 12,
     marginTop: 30,
+    alignSelf: 'center',
+    gap: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  referSettingsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.accent,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 16,
     alignSelf: 'center',
     gap: 10,
     shadowColor: '#000',

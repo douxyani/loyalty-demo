@@ -6,6 +6,7 @@ type SignUpData = {
   password: string;
   firstName: string;
   lastName: string;
+  referralCode?: string;
 };
 
 export async function signInWithEmail(email: string, password: string) {
@@ -25,7 +26,7 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 export async function signUpWithEmail(data: SignUpData) {
-  const { email, password, firstName, lastName } = data;
+  const { email, password, firstName, lastName, referralCode } = data;
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
@@ -33,6 +34,7 @@ export async function signUpWithEmail(data: SignUpData) {
     options: {
       data: {
         name: `${firstName} ${lastName}`,
+        referred_by_code: referralCode ?? null,
       },
     },
   });

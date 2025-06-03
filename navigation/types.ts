@@ -1,3 +1,5 @@
+import { Post } from "../types/database";
+
 export type NavigationItem = {
     id: string;
     label: string;
@@ -39,12 +41,20 @@ export type RootStackParamList = {
     email: string;
   };
   RewardSettingsScreen: undefined;
+  ReferFriendSettingsScreen: undefined; // <-- Add this line
+  ReferFriendScreen: { userId: string }; // <-- Add this line
+  Posts: { userId: string; isAdmin: boolean };
+  CreatePostScreen: { userId: string, post: Post | null };
 };
 
 export type TabStackParamList = {
   Home: {
     userId: string;
     email: string;
+    isAdmin: boolean;
+  };
+  Posts: {
+    userId: string;
     isAdmin: boolean;
   };
   ProfileScreen: {

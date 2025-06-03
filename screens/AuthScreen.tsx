@@ -51,6 +51,7 @@ export default function AuthScreen({ navigation }: Props) {
   const [isLogin, setIsLogin] = useState(true);
   const [signupStep, setSignupStep] = useState<SignupStep>(1);
   const [errors, setErrors] = useState<ValidationError>({});
+  const [referralCode, setReferralCode] = useState(''); // New state for referral code
   const translateY = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(1)).current;
@@ -176,6 +177,7 @@ export default function AuthScreen({ navigation }: Props) {
           password,
           firstName,
           lastName,
+          referralCode: referralCode.trim().toUpperCase() || undefined, // Pass referral code
         });
 
       if (error) {
@@ -339,11 +341,10 @@ export default function AuthScreen({ navigation }: Props) {
         {
           height: heightAnimation.interpolate({
             inputRange: [0, 1],
-            outputRange: [250, 350] // Adjust these values based on your content
+            outputRange: [250, 400] // Increased for referral input
           })
         }
       ]}>
-        {/* Wrap both Animated.Views in a fragment */}
         <>
           <Animated.View
             style={[
@@ -464,6 +465,21 @@ export default function AuthScreen({ navigation }: Props) {
                 />
               </View>
               {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
+
+              {/* Referral Code Input */}
+              <View style={styles.inputContainer}>
+                <MaterialCommunityIcons name="account-multiple-plus" size={20} color="#666" />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Referral Code (optional)"
+                  placeholderTextColor="#999"
+                  value={referralCode}
+                  onChangeText={setReferralCode}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  maxLength={12}
+                />
+              </View>
             </View>
           </Animated.View>
         </>
