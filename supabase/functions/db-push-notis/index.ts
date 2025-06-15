@@ -1,5 +1,5 @@
-import { corsHeaders } from '../_shared/cors.ts';
-import { sendNotificationsForPost } from '../_shared/post-noti.ts';
+import { corsHeaders } from 'shared/cors.ts';
+import { sendNotificationsForPost } from 'shared/post-noti.ts';
 
 Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') {

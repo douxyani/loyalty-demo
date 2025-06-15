@@ -1,9 +1,0 @@
-{
-  "imports": {
-    "https://deno.land/std@0.177.0/http/server.ts": "https://deno.land/std@0.177.0/http/server.ts",
-    "https://esm.sh/@supabase/supabase-js@2": "https://esm.sh/@supabase/supabase-js@2",
-    "npm:expo-server-sdk@3.7.0": "npm:expo-server-sdk@3.7.0",
-    "../_shared/": "../_shared/"
-  },
-  "nodeModulesDir": "auto"
-}

@@ -1,6 +1,5 @@
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { Expo, ExpoPushReceipt } from 'npm:expo-server-sdk@3.7.0'
+import { createClient } from 'supabase-js'
+import { Expo, ExpoPushReceipt } from 'expo'
 
 const expo = new Expo({ accessToken: Deno.env.get('EXPO_ACCESS_TOKEN') })
 const supabaseAdmin = createClient(
@@ -8,7 +7,12 @@ const supabaseAdmin = createClient(
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 )
 
-serve(async (_req: Request) => {
+interface PendingTicket {
+    ticket_id: string,
+    original_expo_push_token: string
+}
+
+Deno.serve(async (_req: Request) => {
     try {
         // 1. Fetch pending tickets from the log table
         const { data: pendingTickets, error: fetchError } = await supabaseAdmin
@@ -24,7 +28,7 @@ serve(async (_req: Request) => {
         }
 
         // 2. Get receipts from Expo
-        const receiptIds = pendingTickets.map((t) => t.ticket_id)
+        const receiptIds = pendingTickets.map((t: PendingTicket) => t.ticket_id)
         const receiptIdChunks = expo.chunkPushNotificationReceiptIds(receiptIds)
         let allReceipts: { [id: string]: ExpoPushReceipt } = {}
 
