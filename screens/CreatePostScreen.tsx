@@ -13,12 +13,11 @@ import {
   Switch,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { supabaseAdmin } from '../lib/supabase';
-import { theme } from '../styles/theme';
+import { RootStackParamList } from '../navigation/types.ts';
+import { supabaseAdmin } from '../lib/supabase.ts';
+import { theme } from '../styles/theme.ts';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { sendPostNotification } from '../lib/pushNotifications';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreatePostScreen'>;
 
@@ -104,6 +103,7 @@ export default function CreatePostScreen({ route, navigation }: Props) {
       is_forever: isForever,
       is_hidden: isHidden,
       valid_until: isValidUntil ? isValidUntil : null,
+      notify_on_creation: sendNotification,
     };
     if (editing && post?.id) {
       const { error } = await supabaseAdmin.from('posts').update(postPayload).eq('id', post.id);
@@ -120,14 +120,6 @@ export default function CreatePostScreen({ route, navigation }: Props) {
       if (error) {
         Alert.alert('Error', error.message);
       } else {
-        // If sendNotification is checked, trigger push notification
-        if (sendNotification && data?.id) {
-          try {
-            await sendPostNotification(data.id);
-          } catch (err) {
-            Alert.alert('Notification Error', 'Failed to send push notification.');
-          }
-        }
         navigation.goBack();
       }
     }

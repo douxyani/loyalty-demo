@@ -28,6 +28,7 @@
     "expo-file-system": "~18.1.10",
     "expo-linear-gradient": "~14.1.4",
     "expo-modules-core": "~2.3.13",
+    "expo-notifications": "~0.31.2",
     "expo-secure-store": "~14.2.3",
     "expo-web-browser": "~14.1.6",
     "lucide-react-native": "0.511.0",
@@ -46,8 +47,7 @@
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "^0.20.0",
     "sonner-native": "^0.20.0",
-    "stacktrace-parser": "^0.1.10",
-    "expo-notifications": "~0.31.2"
+    "stacktrace-parser": "^0.1.10"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -55,6 +55,7 @@
     "@babel/plugin-transform-runtime": "^7.24.0",
     "@expo/metro-config": "~0.20.0",
     "@types/react": "~19.0.10",
+    "supabase-cli": "^0.0.21",
     "typescript": "^5.1.3"
   }
 }
