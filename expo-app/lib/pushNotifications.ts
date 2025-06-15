@@ -72,7 +72,7 @@ export const requestAndRegisterPushToken = async (userId: string) => {
   }
 };
 
-export const sendPostNotification = async (postId: string) => {
+export const sendPostNotification = async (postId: string, title: string, details: string) => {
   // Calls your Supabase Edge Function (adjust function name if needed)
   const res = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/notify-post`, {
     method: 'POST',
@@ -80,7 +80,11 @@ export const sendPostNotification = async (postId: string) => {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ postId }),
+    body: JSON.stringify({ record: {
+        id: postId,
+        title,
+        details
+    }})
   });
   if (!res.ok) {
     throw new Error('Failed to trigger notification');

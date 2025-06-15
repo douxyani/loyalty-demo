@@ -13,9 +13,9 @@ import {
   Switch,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types.ts';
-import { supabaseAdmin } from '../lib/supabase.ts';
-import { theme } from '../styles/theme.ts';
+import { RootStackParamList } from '../navigation/types';
+import { supabaseAdmin } from '../lib/supabase';
+import { theme } from '../styles/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
@@ -309,7 +309,6 @@ export default function CreatePostScreen({ route, navigation }: Props) {
           </TouchableOpacity>
         </View>
 
-        {/* DateTimePickerModal */}
         <DateTimePickerModal
           isVisible={pickerType !== null}
           mode={pickerType === 'date' ? 'date' : 'time'}

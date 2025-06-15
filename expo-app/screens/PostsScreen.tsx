@@ -96,7 +96,7 @@ function PostCard({
           style: 'destructive',
           onPress: async () => {
             try {
-              await sendPostNotification(post.id);
+              await sendPostNotification(post.id, post.title, post.details);
               Alert.alert('Notification Sent', 'Users have been notified.');
             } catch (err) {
               Alert.alert('Notification Error', 'Failed to send notification.');

@@ -1,5 +1,6 @@
 import { corsHeaders } from 'shared/cors.ts';
 import { sendNotificationsForPost } from 'shared/post-noti.ts';
+import { PostPayload } from "shared/types.ts";
 
 Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') {
@@ -8,7 +9,8 @@ Deno.serve(async (req) => {
 
     try {
         // ----- USER VERIFIED AS ADMIN -----
-        return await sendNotificationsForPost(req)
+         const { record }: { record: PostPayload } = await req.json()
+        return await sendNotificationsForPost(record)
 
     } catch (error) {
         console.error('Error processing request:', error);

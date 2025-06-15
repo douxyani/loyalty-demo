@@ -1,12 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { Expo, ExpoPushMessage } from 'npm:expo-server-sdk@3.7.0'
 import { corsHeaders } from './cors.ts';
-
-interface PostPayload {
-    id: string;
-    title: string;
-    details: string;
-}
+import { PostPayload } from "./types.ts";
 
 interface TicketData {
     ticket_id: string; // ExpoPushReceiptId is essentially a string
@@ -45,9 +40,9 @@ async function savePushTickets(tickets: TicketData[], postId: string) {
 }
 
 export async function sendNotificationsForPost(
-    req: Request,
+    post: PostPayload
 ) {
-    const { record: { id, title, details } }: { record: PostPayload } = await req.json();
+    const {id, title, details} = post;
 
     const { data: tokensData, error: tokensError } = await supabaseAdminClient
         .from('user_push_tokens')
