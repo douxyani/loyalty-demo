@@ -1,0 +1,16 @@
+{
+  // Enable the Deno extension for this workspace
+  "deno.enable": true,
+  
+  // Use Deno to lint your code
+  "deno.lint": true,
+  
+  // Enable unstable Deno features if your code uses them (good to have)
+  "deno.unstable": true,
+  
+  // If VS Code asks you to choose a TS version, this makes it use the Deno one
+  "typescript.tsdk": "deno/lib/typescript.d.ts",
+  
+  // Suggests enabling the Deno extension for this workspace if it's disabled
+  "deno.suggest.denoConfig": true
+}

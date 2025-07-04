@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "a0-project",
+    "slug": "snack-b8ba9bef-0298-462b-9fbb-407e41e49612",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourusername.a0project",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow Loyalty Rewards to access your camera to scan QR codes."
+      },
+      "jsEngine": "jsc"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "CAMERA"
+      ],
+      "package": "com.anonymous.loyaltyrewards",
+      "jsEngine": "jsc"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "description": "Quickly generate React Native components with AI",
+    "plugins": [
+      [
+        "expo-barcode-scanner",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan QR codes."
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "jsEngine": "jsc",
+    "extra": {
+      "EXPO_PUBLIC_SUPABASE_URL": "https://lhlkwgrnmtckqyisxtqg.supabase.co/",
+      "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxobGt3Z3JubXRja3F5aXN4dHFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2OTQ2MTksImV4cCI6MjA2MzI3MDYxOX0.4CCWjRWX370FHW4pUw43c5ODxIpdRNkoto95ReuJBKo",
+      "eas": {
+          "projectId": "a15c847a-85e8-4c4a-a3cc-2a5d1141bc79"
+        }
+    }
+  }
+}

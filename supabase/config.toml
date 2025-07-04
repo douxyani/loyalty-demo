@@ -1,0 +1,14 @@
+[functions.admin-push-notis]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/admin-push-notis/index.ts"
+
+[functions.db-push-notis]
+enabled = true
+verify_jwt = false 
+entrypoint = "./functions/db-push-notis/index.ts"
+
+[functions.process-push-receipts]
+enabled = true
+verify_jwt = false 
+entrypoint = "./functions/process-push-receipts/index.ts"
