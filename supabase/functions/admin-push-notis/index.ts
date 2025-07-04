@@ -1,5 +1,5 @@
-import { corsHeaders } from '../_shared/cors.ts';
-import { sendNotificationsForPost } from '../_shared/post-noti.ts';
+import { corsHeaders } from 'shared/cors.ts';
+import { sendNotificationsForPost } from 'shared/post-noti.ts';
 import { createClient } from 'supabase-js';
 import { PostPayload } from "shared/types.ts";
 
@@ -21,17 +21,17 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders })
         }
         
-        const { data: profile, error: profileError } = await userClient
-        .from('profiles')
+        const { data: userRow, error: userRowError } = await userClient
+        .from('users')
         .select('role')
         .eq('id', user.id)
-        .single()
-        
-        if (profileError) {
-            throw new Error('Could not fetch user profile.')
+        .single();
+
+        if (userRowError) {
+            throw new Error('Could not fetch user userRow.')
         }
         
-        if (profile?.role !== 'admin') {
+        if (userRow?.role !== 'admin') {
             return new Response(JSON.stringify({ error: 'Permission denied: User is not an admin.' }), { status: 403, headers: corsHeaders })
         }
         

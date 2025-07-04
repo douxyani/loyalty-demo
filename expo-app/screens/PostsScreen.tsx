@@ -99,6 +99,7 @@ function PostCard({
               await sendPostNotification(post.id, post.title, post.details);
               Alert.alert('Notification Sent', 'Users have been notified.');
             } catch (err) {
+                console.error('Notification error:', err);
               Alert.alert('Notification Error', 'Failed to send notification.');
             }
           },
@@ -106,6 +107,8 @@ function PostCard({
       ]
     );
   };
+
+  const showInactiveBanner = !active;
 
   return (
     <View
@@ -115,69 +118,79 @@ function PostCard({
         Platform.OS === 'ios' ? styles.cardShadowIOS : styles.cardShadowAndroid,
       ]}
     >
-      <View style={styles.cardHeader}>
-        <Text style={[styles.cardTitle, !active && styles.cardTitleInactive]}>
-          {post.title}
-        </Text>
-        {/* Removed infinity icon for is_forever */}
-        {isAdmin && (
-          <View style={styles.adminActions}>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => onEdit && onEdit(post)}
-              accessibilityLabel="Edit post"
-            >
-              <MaterialCommunityIcons name="pencil" size={20} color={theme.colors.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => onDelete && onDelete(post)}
-              accessibilityLabel="Delete post"
-            >
-              <MaterialCommunityIcons name="delete-outline" size={20} color="#F44336" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={handleNotify}
-              accessibilityLabel="Notify users"
-            >
-              <MaterialCommunityIcons name="bell-ring-outline" size={20} color={theme.colors.primary} />
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-      <Text style={[styles.cardDetails, !active && styles.cardDetailsInactive]}>
-        {post.details}
-      </Text>
-      <View style={styles.cardMetaRow}>
-        {post.is_forever ? (
-          <Text style={styles.cardMeta}>Valid forever</Text>
-        ) : (
-          <>
-            {post.valid_until && (
-              <Text style={styles.cardMeta}>
-                Until {new Date(post.valid_until).toLocaleDateString()}
-              </Text>
-            )}
-            {post.days_of_week && post.days_of_week.length > 0 && (
-              <Text style={styles.cardMeta}>
-                {formatDays(post.days_of_week as number[])}
-              </Text>
-            )}
-            {post.time_start && post.time_end && (
-              <Text style={styles.cardMeta}>
-                {formatTime(post.time_start)} - {formatTime(post.time_end)}
-              </Text>
-            )}
-          </>
-        )}
-      </View>
-      {!active && (
-        <View style={styles.inactiveOverlay}>
-          <MaterialCommunityIcons name="eye-off" size={18} color="#bbb" />
+      {showInactiveBanner && isAdmin && (
+        <View style={styles.inactiveBanner}>
+          <MaterialCommunityIcons name="eye-off" size={16} color="#bbb" />
           <Text style={styles.inactiveText}>Not Active</Text>
         </View>
       )}
+      {showInactiveBanner && !isAdmin && (
+        <View style={styles.inactiveOverlayUser}>
+          <MaterialCommunityIcons name="eye-off" size={16} color="#bbb" />
+          <Text style={styles.inactiveText}>Not Active</Text>
+        </View>
+      )}
+      <View style={[
+        styles.cardContent,
+        showInactiveBanner && isAdmin && styles.cardContentWithBanner
+      ]}>
+        <View style={styles.cardHeader}>
+          <Text style={[styles.cardTitle, !active && styles.cardTitleInactive]}>
+            {post.title}
+          </Text>
+          {isAdmin && (
+            <View style={styles.adminActions}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => onEdit && onEdit(post)}
+                accessibilityLabel="Edit post"
+              >
+                <MaterialCommunityIcons name="pencil" size={20} color={theme.colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => onDelete && onDelete(post)}
+                accessibilityLabel="Delete post"
+              >
+                <MaterialCommunityIcons name="delete-outline" size={20} color="#F44336" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={handleNotify}
+                accessibilityLabel="Notify users"
+              >
+                <MaterialCommunityIcons name="bell-ring-outline" size={20} color={theme.colors.primary} />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+        <Text style={[styles.cardDetails, !active && styles.cardDetailsInactive]}>
+          {post.details}
+        </Text>
+        <View style={styles.cardMetaRow}>
+          {post.is_forever ? (
+            <Text style={styles.cardMeta}>Valid forever</Text>
+          ) : (
+            <>
+              {post.valid_until && (
+                <Text style={styles.cardMeta}>
+                  Until {new Date(post.valid_until).toLocaleDateString()}
+                </Text>
+              )}
+              {post.days_of_week && post.days_of_week.length > 0 && (
+                <Text style={styles.cardMeta}>
+                  {formatDays(post.days_of_week as number[])}
+                </Text>
+              )}
+              {post.time_start && post.time_end && (
+                <Text style={styles.cardMeta}>
+                  {formatTime(post.time_start)} - {formatTime(post.time_end)}
+                </Text>
+              )}
+            </>
+          )}
+        </View>
+      </View>
     </View>
   );
 }
@@ -305,7 +318,7 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH,
     alignSelf: 'center',
     borderRadius: 16,
-    padding: 18,
+    padding: 0,
     marginBottom: 10,
     backgroundColor: '#fff',
     marginTop: 0,
@@ -374,7 +387,25 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontWeight: '600',
   },
-  inactiveOverlay: {
+  inactiveBanner: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f7f8fa',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e6eaf3',
+    minHeight: 24,
+    height: 28,
+    zIndex: 10,
+    gap: 4,
+  },
+  inactiveOverlayUser: {
     position: 'absolute',
     top: 12,
     right: 16,
@@ -385,12 +416,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 2,
+    zIndex: 10,
   },
   inactiveText: {
     color: '#bbb',
     fontSize: 13,
     fontWeight: '600',
     marginLeft: 2,
+  },
+  cardContent: {
+    padding: 18,
+    paddingTop: 12,
+  },
+  cardContentWithBanner: {
+    paddingTop: 36,
   },
   emptyContainer: {
     alignItems: 'center',

@@ -76,12 +76,17 @@ export const requestAndRegisterPushToken = async (userId: string) => {
 };
 
 export const sendPostNotification = async (postId: string, title: string, details: string) => {
-    // Calls your Supabase Edge Function (adjust function name if needed)
-    const res = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/notify-post`, {
+   const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+        throw new Error('User is not authenticated.');
+    }
+
+    const res = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/admin-push-notis`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY}`,
+            'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
             record: {
@@ -91,8 +96,11 @@ export const sendPostNotification = async (postId: string, title: string, detail
             }
         })
     });
+
     if (!res.ok) {
-        throw new Error('Failed to trigger notification');
+        const err = await res.json();
+        throw new Error(`Failed to trigger notification: ${err.error || 'Unknown error'}`);
     }
+
     return await res.json();
 };

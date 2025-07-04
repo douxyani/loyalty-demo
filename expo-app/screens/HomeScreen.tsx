@@ -76,6 +76,7 @@ export default function HomeScreen({ route, navigation }: Props) {
   const [reward, setReward] = useState<Reward | null>(null);
   const [rewardLoading, setRewardLoading] = useState(true);
   const [showRewardInfo, setShowRewardInfo] = useState(false);
+  const [showClaimInfo, setShowClaimInfo] = useState(false); // Add for claim CTA modal
   const channelRef = useRef<RealtimeChannel | null>(null); // Ref to store the channel instance
 
   useEffect(() => {
@@ -356,7 +357,35 @@ export default function HomeScreen({ route, navigation }: Props) {
   const purchasesRequired = reward?.purchases_req ?? 6;
   const dots = Array.from({ length: purchasesRequired }, (_, i) => i < count);
 
-  // Loyalty Card with Info Button
+  // Split dots into two rows for wrapping (max 10)
+  const splitDots = (() => {
+    if (purchasesRequired <= 5) {
+      return [dots, []];
+    }
+    const topRowCount = Math.ceil(purchasesRequired / 2);
+    return [
+      dots.slice(0, topRowCount),
+      dots.slice(topRowCount)
+    ];
+  })();
+
+  // Calculate dynamic dot size
+  const cardHorizontalPadding = 20 * 2; // padding from styles.card
+  const availableWidth = CARD_WIDTH - cardHorizontalPadding;
+  const maxDotsInRow = Math.max(splitDots[0].length, splitDots[1].length, 1);
+  const minDotSize = 22;
+  const maxDotSize = 38;
+  const dotSpacing = 8;
+  // Calculate dot size so all dots + spacing fit in availableWidth
+  const dotDiameter = Math.max(
+    minDotSize,
+    Math.min(
+      maxDotSize,
+      (availableWidth - dotSpacing * (maxDotsInRow - 1)) / maxDotsInRow
+    )
+  );
+
+  // Loyalty Card with Info Button and Claim CTA
   const renderLoyaltyCard = () => (
     <LinearGradient
       colors={theme.colors.gradient}
@@ -369,24 +398,66 @@ export default function HomeScreen({ route, navigation }: Props) {
           <Text style={styles.cardTitle}>Loyalty Card</Text>
           <Text style={styles.cardSubtitle}>{count}/{purchasesRequired} Purchases</Text>
         </View>
-        <TouchableOpacity
-          style={styles.infoButton}
-          onPress={() => setShowRewardInfo(true)}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <MaterialCommunityIcons name="information-outline" size={26} color="#fff" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {/* Show red exclamation if eligible for reward */}
+          {count >= purchasesRequired && (
+            <TouchableOpacity
+              style={styles.claimCtaButton}
+              onPress={() => setShowClaimInfo(true)}
+              accessibilityLabel="How to claim your reward"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialCommunityIcons name="alert-circle" size={28} color="#F44336" />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={styles.infoButton}
+            onPress={() => setShowRewardInfo(true)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <MaterialCommunityIcons name="information-outline" size={26} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
-      <View style={styles.dotsContainer}>
-        {dots.map((filled, i) => (
-          <View
-            key={i}
-            style={[
-              styles.dot,
-              filled ? styles.dotFilled : styles.dotEmpty,
-            ]}
-          />
-        ))}
+      <View style={styles.dotsOuterContainer}>
+        {splitDots[0].length > 0 && (
+          <View style={styles.dotsRow}>
+            {splitDots[0].map((filled, i) => (
+              <View
+                key={`dot-top-${i}`}
+                style={[
+                  styles.dot,
+                  filled ? styles.dotFilled : styles.dotEmpty,
+                  {
+                    width: dotDiameter,
+                    height: dotDiameter,
+                    borderRadius: dotDiameter / 2,
+                    marginRight: i !== splitDots[0].length - 1 ? dotSpacing : 0,
+                  }
+                ]}
+              />
+            ))}
+          </View>
+        )}
+        {splitDots[1].length > 0 && (
+          <View style={styles.dotsRow}>
+            {splitDots[1].map((filled, i) => (
+              <View
+                key={`dot-bottom-${i}`}
+                style={[
+                  styles.dot,
+                  filled ? styles.dotFilled : styles.dotEmpty,
+                  {
+                    width: dotDiameter,
+                    height: dotDiameter,
+                    borderRadius: dotDiameter / 2,
+                    marginRight: i !== splitDots[1].length - 1 ? dotSpacing : 0,
+                  }
+                ]}
+              />
+            ))}
+          </View>
+        )}
       </View>
       {loading && (
         <View style={styles.loadingOverlay}>
@@ -399,8 +470,9 @@ export default function HomeScreen({ route, navigation }: Props) {
         transparent
         animationType="fade"
         onRequestClose={() => setShowRewardInfo(false)}
+        statusBarTranslucent
+        presentationStyle="overFullScreen"
       >
-        {/* Use BlurView for background, matching QR modal */}
         <BlurView intensity={100} style={styles.rewardModalOverlay}>
           <View style={styles.rewardModalContent}>
             {rewardLoading ? (
@@ -435,6 +507,36 @@ export default function HomeScreen({ route, navigation }: Props) {
             ) : (
               <Text style={styles.rewardError}>Unable to load reward info.</Text>
             )}
+          </View>
+        </BlurView>
+      </Modal>
+      {/* Claim CTA Modal */}
+      <Modal
+        visible={showClaimInfo}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowClaimInfo(false)}
+        statusBarTranslucent
+        presentationStyle="overFullScreen"
+      >
+        <BlurView intensity={100} style={styles.rewardModalOverlay}>
+          <View style={styles.rewardModalContent}>
+            <MaterialCommunityIcons name="alert-circle" size={48} color="#F44336" style={{ marginBottom: 10 }} />
+            <Text style={styles.claimTitle}>Ready to Claim Your Reward?</Text>
+            <Text style={styles.claimDescription}>
+              Please visit the store and inform a member of staff at the till that you would like to claim your reward. Kindly present your QR code to complete the process.
+            </Text>
+            <Text style={styles.claimWarning}>
+              <MaterialCommunityIcons name="alert" size={18} color="#F44336" />
+              {' '}
+              Please note: Additional purchases will not be counted towards your next reward until you have claimed your current reward.
+            </Text>
+            <TouchableOpacity
+              style={styles.rewardModalCloseButton}
+              onPress={() => setShowClaimInfo(false)}
+            >
+              <Text style={styles.rewardModalCloseButtonText}>Got it!</Text>
+            </TouchableOpacity>
           </View>
         </BlurView>
       </Modal>
@@ -624,18 +726,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     opacity: 0.8,
   },
-  dotsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
+  dotsOuterContainer: {
     marginTop: 20,
+    width: '100%',
+    paddingLeft: 0,
+    paddingRight: 0,
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    width: '100%',
   },
   dot: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
     borderWidth: 2,
     borderColor: '#fff',
+    backgroundColor: 'transparent',
   },
   dotEmpty: {
     backgroundColor: 'transparent',
@@ -950,6 +1056,35 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.18)',
     borderRadius: 16,
     alignSelf: 'flex-start',
+  },
+  claimCtaButton: {
+    marginRight: 6,
+    marginTop: 2,
+    backgroundColor: 'rgba(244,67,54,0.12)',
+    borderRadius: 16,
+    padding: 4,
+    alignSelf: 'flex-start',
+  },
+  claimTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#F44336',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  claimDescription: {
+    fontSize: 16,
+    color: '#444',
+    marginBottom: 18,
+    textAlign: 'center',
+  },
+  claimWarning: {
+    color: '#F44336',
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 14,
+    marginTop: 2,
+    textAlign: 'center',
   },
   // Reward Modal Styles
   rewardModalOverlay: {
