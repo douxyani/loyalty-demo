@@ -119,9 +119,7 @@ function PostCard({
         <Text style={[styles.cardTitle, !active && styles.cardTitleInactive]}>
           {post.title}
         </Text>
-        {post.is_forever && (
-          <MaterialCommunityIcons name="infinity" size={18} color={theme.colors.primary} style={{ marginLeft: 6 }} />
-        )}
+        {/* Removed infinity icon for is_forever */}
         {isAdmin && (
           <View style={styles.adminActions}>
             <TouchableOpacity
