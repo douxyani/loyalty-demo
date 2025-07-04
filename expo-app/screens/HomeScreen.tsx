@@ -614,7 +614,7 @@ export default function HomeScreen({ route, navigation }: Props) {
 
   const renderStats = () => (
     <View style={styles.statsContainer}>
-      <Text style={styles.statsTitle}>Your Activity</Text>
+      <Text style={styles.statsTitle}>Your Purchases</Text>
       {statsLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={theme.colors.primary} />
@@ -759,6 +759,17 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 12,
     gap: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.12,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   qrButtonText: {
     color: '#fff',
@@ -1162,12 +1173,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.accent,
+    backgroundColor: theme.colors.primary, // Match QR button color
     marginHorizontal: 20,
     marginTop: 16,
     padding: 15,
     borderRadius: 12,
     gap: 10,
+    // Add shadow for consistency
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.12,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   referButtonText: {
     color: '#fff',

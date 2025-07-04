@@ -85,6 +85,9 @@ function PostCard({
 }) {
   const active = isPostActive(post);
 
+  // Add hidden status for admin
+  const isHidden = !!post.is_hidden;
+
   const handleNotify = () => {
     Alert.alert(
       'Notify Users',
@@ -114,10 +117,17 @@ function PostCard({
     <View
       style={[
         styles.card,
-        !active && styles.cardInactive,
+        (!active || isHidden) && styles.cardInactive,
         Platform.OS === 'ios' ? styles.cardShadowIOS : styles.cardShadowAndroid,
       ]}
     >
+      {/* Show banners for admin */}
+      {isAdmin && isHidden && (
+        <View style={styles.hiddenBanner}>
+          <MaterialCommunityIcons name="eye-off" size={16} color="#F44336" />
+          <Text style={styles.hiddenText}>Hidden from users</Text>
+        </View>
+      )}
       {showInactiveBanner && isAdmin && (
         <View style={styles.inactiveBanner}>
           <MaterialCommunityIcons name="eye-off" size={16} color="#bbb" />
@@ -132,7 +142,7 @@ function PostCard({
       )}
       <View style={[
         styles.cardContent,
-        showInactiveBanner && isAdmin && styles.cardContentWithBanner
+        (showInactiveBanner && isAdmin) && styles.cardContentWithBanner
       ]}>
         <View style={styles.cardHeader}>
           <Text style={[styles.cardTitle, !active && styles.cardTitleInactive]}>
@@ -213,7 +223,8 @@ export default function PostsScreen({ route }: Props) {
     if (error) {
       setPosts([]);
     } else {
-      setPosts(data.filter((p: Post) => !p.is_hidden));
+      // Show all posts for admin, only visible posts for users
+      setPosts(isAdmin ? data : data.filter((p: Post) => !p.is_hidden));
     }
     setLoading(false);
   };
@@ -342,6 +353,30 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     backgroundColor: '#f7f8fa',
     borderColor: '#e6eaf3',
+  },
+  hiddenBanner: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff4f4',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f8d7da',
+    minHeight: 24,
+    height: 28,
+    zIndex: 20,
+    gap: 4,
+  },
+  hiddenText: {
+    color: '#F44336',
+    fontSize: 13,
+    fontWeight: '700',
+    marginLeft: 2,
   },
   cardHeader: {
     flexDirection: 'row',
