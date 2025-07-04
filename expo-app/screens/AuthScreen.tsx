@@ -85,6 +85,7 @@ export default function AuthScreen({ navigation }: Props) {
 
     const checkAuth = async () => {
         console.log('Checking authentication...');
+        let didNavigate = false;
         try {
             // Check stored credentials first
             const authData = await getAuthData();
@@ -117,6 +118,7 @@ export default function AuthScreen({ navigation }: Props) {
                         email: data.session.user.email ?? '',
                         isAdmin: role === 'admin',
                     });
+                    didNavigate = true;
                     return;
                 }
             }
@@ -148,13 +150,11 @@ export default function AuthScreen({ navigation }: Props) {
             // Do NOT navigate.replace('AuthScreen') here!
             // Just let the manual login UI show by setting checkingAuth to false
         } finally {
-            setCheckingAuth(false);
+            if (!didNavigate) {
+                setCheckingAuth(false);
+            }
         }
     };
-
-    useEffect(() => {
-        checkAuth();
-    }, []);
 
     const handleAuth = async (type: 'signin' | 'signup') => {
         const newErrors: ValidationError = {};

@@ -12,13 +12,14 @@ import {
     ActivityIndicator,
     Switch,
     SafeAreaView,
+    Modal,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { supabaseAdmin } from '../lib/supabase';
 import { theme } from '../styles/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreatePostScreen'>;
 
@@ -27,7 +28,10 @@ const DAYS = [
 ];
 
 function formatTimeStr(date: Date) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    // Only show hours and minutes, no seconds, and never show seconds
+    const h = date.getHours().toString().padStart(2, '0');
+    const m = date.getMinutes().toString().padStart(2, '0');
+    return `${h}:${m}`;
 }
 
 function formatDateStr(date: Date) {
@@ -49,9 +53,12 @@ export default function CreatePostScreen({ route, navigation }: Props) {
     const [saving, setSaving] = useState(false);
     const [editing, setEditing] = useState(false);
     const [sendNotification, setSendNotification] = useState(false);
+    const [warning, setWarning] = useState<string | null>(null);
+    // Remove showWarningModal and custom modal usage
 
     // Date/time picker states
     const [pickerType, setPickerType] = useState<'start' | 'end' | 'date' | null>(null);
+    const [pickerValue, setPickerValue] = useState<Date>(new Date());
 
     // Prefill fields if editing
     useEffect(() => {
@@ -69,28 +76,67 @@ export default function CreatePostScreen({ route, navigation }: Props) {
         }
     }, [post]);
 
+    // Show custom modal when pickerType is set
+    const showCustomPicker = pickerType !== null;
+
+    // Set pickerValue when opening modal
+    useEffect(() => {
+        if (pickerType === 'start' && timeStart) setPickerValue(parseTime(timeStart));
+        else if (pickerType === 'end' && timeEnd) setPickerValue(parseTime(timeEnd));
+        else if (pickerType === 'date' && isValidUntil) setPickerValue(parseDate(isValidUntil));
+        else setPickerValue(new Date());
+        // eslint-disable-next-line
+    }, [pickerType]);
+
+    // Helper to get a display string for the picker value
+    const getPickerDisplayValue = () => {
+        if (pickerType === 'start' || pickerType === 'end') {
+            return formatTimeStr(pickerValue);
+        }
+        if (pickerType === 'date') {
+            return formatDateStr(pickerValue);
+        }
+        return '';
+    };
+
+    // Helper for iOS: show picker inline in modal, for Android: show native picker dialog
+    const [androidTempValue, setAndroidTempValue] = useState<Date | null>(null);
+
     const toggleDay = (dayIdx: number) => {
         setDaysOfWeek(prev =>
             prev.includes(dayIdx) ? prev.filter(d => d !== dayIdx) : [...prev, dayIdx]
         );
     };
 
+    // Helper to show a warning using Alert
+    const showWarning = (msg: string) => {
+        Alert.alert('Validation Error', msg);
+    };
+
     const handleSave = async () => {
+        setWarning(null);
         if (!title.trim()) {
-            Alert.alert('Validation Error', 'Title is required.');
+            showWarning('Title is required.');
             return;
         }
         if (!details.trim()) {
-            Alert.alert('Validation Error', 'Details are required.');
+            showWarning('Details are required.');
             return;
         }
         if (!isForever) {
             if (!timeStart || !timeEnd) {
-                Alert.alert('Validation Error', 'Start and end time are required unless post is forever.');
+                showWarning('Start and end time are required unless post is forever.');
+                return;
+            }
+            // Check that end time is strictly after start time
+            const start = parseTime(timeStart);
+            const end = parseTime(timeEnd);
+            if (end <= start) {
+                showWarning('End time must be after start time.');
                 return;
             }
             if (daysOfWeek.length === 0) {
-                Alert.alert('Validation Error', 'Select at least one day.');
+                showWarning('Select at least one day.');
                 return;
             }
         }
@@ -110,7 +156,7 @@ export default function CreatePostScreen({ route, navigation }: Props) {
             const { error } = await supabaseAdmin.from('posts').update(postPayload).eq('id', post.id);
             setSaving(false);
             if (error) {
-                Alert.alert('Error', error.message);
+                Alert.alert('Error saving post', error.message);
             } else {
                 navigation.goBack();
             }
@@ -119,7 +165,7 @@ export default function CreatePostScreen({ route, navigation }: Props) {
             const { data, error } = await supabaseAdmin.from('posts').insert(postPayload).select().single();
             setSaving(false);
             if (error) {
-                Alert.alert('Error', error.message);
+                Alert.alert('Error creating post', error.message);
             } else {
                 navigation.goBack();
             }
@@ -210,30 +256,43 @@ export default function CreatePostScreen({ route, navigation }: Props) {
                 </View>
                 {!isForever && (
                     <>
-                        <View style={styles.row}>
+                        <View style={styles.pickerRow}>
                             <Text style={styles.label}>Start Time</Text>
                             <TouchableOpacity
-                                style={[styles.input, styles.timeInput]}
+                                style={styles.pickerInput}
                                 onPress={() => setPickerType('start')}
-                                activeOpacity={0.7}
+                                activeOpacity={0.8}
                             >
-                                <Text style={{ color: timeStart ? '#222' : '#aaa', fontSize: 16 }}>
-                                    {timeStart ? timeStart : 'Select time'}
+                                <MaterialCommunityIcons name="clock-outline" size={20} color={theme.colors.primary} style={{ marginRight: 10 }} />
+                                <Text style={[styles.pickerValue, !timeStart && styles.pickerPlaceholder]}>
+                                    {timeStart ? formatTimeStr(parseTime(timeStart)) : 'Select time'}
                                 </Text>
-                                <MaterialCommunityIcons name="clock-outline" size={20} color={theme.colors.primary} />
                             </TouchableOpacity>
                         </View>
-                        <View style={styles.row}>
+                        <View style={styles.pickerRow}>
                             <Text style={styles.label}>End Time</Text>
                             <TouchableOpacity
-                                style={[styles.input, styles.timeInput]}
+                                style={styles.pickerInput}
                                 onPress={() => setPickerType('end')}
-                                activeOpacity={0.7}
+                                activeOpacity={0.8}
                             >
-                                <Text style={{ color: timeEnd ? '#222' : '#aaa', fontSize: 16 }}>
-                                    {timeEnd ? timeEnd : 'Select time'}
+                                <MaterialCommunityIcons name="clock-outline" size={20} color={theme.colors.primary} style={{ marginRight: 10 }} />
+                                <Text style={[styles.pickerValue, !timeEnd && styles.pickerPlaceholder]}>
+                                    {timeEnd ? formatTimeStr(parseTime(timeEnd)) : 'Select time'}
                                 </Text>
-                                <MaterialCommunityIcons name="clock-outline" size={20} color={theme.colors.primary} />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.pickerRow}>
+                            <Text style={styles.label}>Valid Until</Text>
+                            <TouchableOpacity
+                                style={styles.pickerInput}
+                                onPress={() => setPickerType('date')}
+                                activeOpacity={0.8}
+                            >
+                                <MaterialCommunityIcons name="calendar" size={20} color={theme.colors.primary} style={{ marginRight: 10 }} />
+                                <Text style={[styles.pickerValue, !isValidUntil && styles.pickerPlaceholder]}>
+                                    {isValidUntil ? isValidUntil : 'Select date'}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                         <Text style={styles.label}>Days of Week</Text>
@@ -258,17 +317,6 @@ export default function CreatePostScreen({ route, navigation }: Props) {
                                 </TouchableOpacity>
                             ))}
                         </View>
-                        <Text style={styles.label}>Valid Until</Text>
-                        <TouchableOpacity
-                            style={[styles.input, styles.timeInput]}
-                            onPress={() => setPickerType('date')}
-                            activeOpacity={0.7}
-                        >
-                            <Text style={{ color: isValidUntil ? '#222' : '#aaa', fontSize: 16 }}>
-                                {isValidUntil ? isValidUntil : 'Select date'}
-                            </Text>
-                            <MaterialCommunityIcons name="calendar" size={20} color={theme.colors.primary} />
-                        </TouchableOpacity>
                     </>
                 )}
                 <View style={styles.row}>
@@ -333,28 +381,81 @@ export default function CreatePostScreen({ route, navigation }: Props) {
                     )}
                 </View>
             </View>
-            <DateTimePickerModal
-                isVisible={pickerType !== null}
-                mode={pickerType === 'date' ? 'date' : 'time'}
-                date={
-                    pickerType === 'start'
-                        ? parseTime(timeStart)
-                        : pickerType === 'end'
-                            ? parseTime(timeEnd)
-                            : pickerType === 'date'
-                                ? parseDate(isValidUntil)
-                                : new Date()
-                }
-                onConfirm={date => {
-                    if (pickerType === 'start') setTimeStart(formatTimeStr(date));
-                    else if (pickerType === 'end') setTimeEnd(formatTimeStr(date));
-                    else if (pickerType === 'date') setIsValidUntil(formatDateStr(date));
-                    setPickerType(null);
-                }}
-                onCancel={() => setPickerType(null)}
-                is24Hour={true}
-                display="default"
-            />
+            {/* Custom Date/Time Picker Modal */}
+            {Platform.OS === 'ios' && (
+                <Modal
+                    visible={showCustomPicker}
+                    animationType="fade"
+                    transparent
+                    onRequestClose={() => setPickerType(null)}
+                >
+                    <View style={styles.pickerModalOverlay}>
+                        <TouchableOpacity
+                            style={styles.pickerModalBackdrop}
+                            activeOpacity={1}
+                            onPress={() => setPickerType(null)}
+                        />
+                        <View style={styles.pickerModalCard}>
+                            <Text style={styles.pickerModalTitle}>
+                                {pickerType === 'start' && 'Select Start Time'}
+                                {pickerType === 'end' && 'Select End Time'}
+                                {pickerType === 'date' && 'Select Date'}
+                            </Text>
+                            <DateTimePicker
+                                value={pickerValue}
+                                mode={pickerType === 'date' ? 'date' : 'time'}
+                                display="spinner"
+                                onChange={(_, date) => {
+                                    if (date) {
+                                        setPickerValue(date);
+                                        // Live update the preview value in the input as user scrolls
+                                        if (pickerType === 'start') setTimeStart(formatTimeStr(date));
+                                        else if (pickerType === 'end') setTimeEnd(formatTimeStr(date));
+                                        else if (pickerType === 'date') setIsValidUntil(formatDateStr(date));
+                                    }
+                                }}
+                                is24Hour={true}
+                                style={styles.nativePicker}
+                                textColor="#222"
+                            />
+                            <View style={styles.pickerModalActions}>
+                                <TouchableOpacity
+                                    style={[styles.pickerModalButton, styles.pickerModalCancel]}
+                                    onPress={() => setPickerType(null)}
+                                >
+                                    <Text style={styles.pickerModalCancelText}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.pickerModalButton, styles.pickerModalConfirm]}
+                                    onPress={() => {
+                                        // No need to set again, already set on scroll
+                                        setPickerType(null);
+                                    }}
+                                >
+                                    <Text style={styles.pickerModalConfirmText}>Confirm</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+            )}
+            {Platform.OS === 'android' && showCustomPicker && (
+                <DateTimePicker
+                    value={pickerValue}
+                    mode={pickerType === 'date' ? 'date' : 'time'}
+                    display="default"
+                    is24Hour={true}
+                    onChange={(_, date) => {
+                        if (date) {
+                            setPickerValue(date);
+                            if (pickerType === 'start') setTimeStart(formatTimeStr(date));
+                            else if (pickerType === 'end') setTimeEnd(formatTimeStr(date));
+                            else if (pickerType === 'date') setIsValidUntil(formatDateStr(date));
+                        }
+                        setPickerType(null);
+                    }}
+                />
+            )}
         </KeyboardAvoidingView>
     );
 }
@@ -428,13 +529,39 @@ const styles = StyleSheet.create({
   dayButtonTextSelected: {
     color: '#fff',
   },
-  timeInput: {
-    flex: 1,
-    marginLeft: 10,
+  pickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 12,
+    gap: 12,
     justifyContent: 'space-between',
+  },
+  pickerInput: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f7f8fa',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginLeft: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: '#e6eaf3',
     minHeight: 44,
+  },
+  pickerValue: {
+    fontSize: 16,
+    color: '#222',
+    fontWeight: '600',
+    flex: 1,
+  },
+  pickerPlaceholder: {
+    color: '#aaa',
+    fontWeight: '400',
   },
   bottomButtonBar: {
     flexDirection: 'column',
@@ -521,5 +648,73 @@ const styles = StyleSheet.create({
   cancelButtonFullWidth: {
     flex: 1,
     // If only cancel button, take full width
+  },
+  pickerModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(30,40,60,0.25)',
+    justifyContent: 'flex-end',
+    alignItems: 'stretch',
+  },
+  pickerModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  pickerModalCard: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    paddingTop: 24,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.10,
+    shadowRadius: 12,
+    elevation: 8,
+    alignItems: 'center',
+  },
+  pickerModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  nativePicker: {
+    width: '100%',
+    marginBottom: 12,
+    // textColor is set via prop for iOS, not here
+  },
+  pickerModalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 12,
+    gap: 16,
+  },
+  pickerModalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  pickerModalCancel: {
+    backgroundColor: '#f7f8fa',
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    marginRight: 8,
+  },
+  pickerModalConfirm: {
+    backgroundColor: theme.colors.primary,
+    marginLeft: 8,
+  },
+  pickerModalCancelText: {
+    color: theme.colors.primary,
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  pickerModalConfirmText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
   },
 });
